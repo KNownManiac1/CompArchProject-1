@@ -1,16 +1,16 @@
-module SCDataPath(ALUOutput, PCCurrent, PC, reset, clock);
+module SCDataPath(MuxRegWriteAddress,ReadData1, ReadData2, Op, Instruction, ALUOutput, PCCurrent, PC, reset, clock);
   input clock, reset;
   input [31:0]  PC;
-  output  [31:0]  ALUOutput, PCCurrent;
-  wire  [31:0]  Instruction;
+  output  [31:0]  ALUOutput, PCCurrent,ReadData1, ReadData2;
+  output  [31:0]  Instruction;
   wire  [31:0]  PCNew1, PCNew2;
   reg [31:0]  PCCurrent;
   wire  RegDst, Jump, ALUSrc, MemToReg, RegWrite, MemRead, MemWrite, Branch;
   wire  [1:0] ALUOp;
-  wire  [2:0] Op;
-  wire  [4:0] MuxRegWriteAddress;
+  output  [2:0] Op;
+  output  [4:0] MuxRegWriteAddress;
   wire  [31:0]  MuxALU2Src, MuxWriteDataSrc, MuxJumpOut, DataMemOut;
-  wire  [31:0]  ReadData1, ReadData2, SignExtend, ShiftLeft, ShiftLeft2, AdderOut, JumpAddress, BranchAddress;
+  wire  [31:0]  SignExtend, ShiftLeft, ShiftLeft2, AdderOut, JumpAddress, BranchAddress;
   wire  Zero, BranchDest, CarryOut, Carry1, Carry2;
   
   Instruction_Memory  unit01(Instruction, PC, clock);     //Read the instruction at positive edge of clock
@@ -33,23 +33,32 @@ module SCDataPath(ALUOutput, PCCurrent, PC, reset, clock);
   Mux32Bit_2To1 unit18(MuxWriteDataSrc, MemToReg, ALUOutput, DataMemOut);       //Writing back to register file
   RegFile_32  unit19(ReadData1, ReadData2, clock, reset, RegWrite, Instruction[25:21], Instruction[20:16], MuxRegWriteAddress, MuxWriteDataSrc);  //Writing to the register file
   initial begin
-    PCCurrent = PC;
+    PCCurrent = PC;   
   end
   always @(negedge clock) begin
     PCCurrent = MuxJumpOut;
   end
 endmodule
 
-/*module TBSCDataPath;
+module TBSCDataPath;
   reg clock, reset;
   reg [31:0]  PC;
-  wire  [31:0]  ALUOutput, PCCurrent;
-  SCDataPath  SCDP(ALUOutput, PCCurrent, PC, reset, clock);
+  wire  [31:0]  ALUOutput, PCCurrent, Instruction, ReadData1, ReadData2;
+  wire [2:0] Op;
+  wire [4:0] DestinationAdd;
+  SCDataPath  SCDP(DestinationAdd, ReadData1, ReadData2, Op, Instruction, ALUOutput, PCCurrent, PC, reset, clock);
   initial begin
-    $monitor($time, " :PC = %b, Reset = %b, Clock = %b, NextPC = %b, ALUOutput = %b.", PC, reset, clock, PCCurrent, ALUOutput);
-    #0  clock = 1'b0; PC = 32'd20; reset = 1'b0;
+    $dumpfile("test.vcd");
+    $dumpvars();
+  end
+  initial begin
+    $monitor($time, " :PC = %b, Reset = %b, Clock = %b, NextPC = %b, ALUOutput = %b, Inst = %b Op = %b ReadData1 = %b ReadData2 = %b Destination = %b", PC, reset, clock, PCCurrent, ALUOutput, Instruction, Op, ReadData1, ReadData2, DestinationAdd);
+    #0  clock = 1'b0; //PC = 32'd20; reset = 1'b0;
     #15 reset = 1'b1;
     #10 PC = 32'd12;
+    #40 PC = PCCurrent;
+    #40 PC = PCCurrent;
+    #40 PC = PCCurrent;
     #40 PC = PCCurrent;
     #40 PC = PCCurrent;
     #50 $finish;
@@ -57,4 +66,4 @@ endmodule
   always  begin
     #10 clock = ~clock;
   end
-endmodule*/
+endmodule

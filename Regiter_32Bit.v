@@ -20,3 +20,17 @@ module reg_32bit(q, d, clock, reset);
     end
   endgenerate
 endmodule
+
+/*module tb;  
+  reg clock, reset;
+  wire  [31:0] q;
+  reg_32bit regd(q, 32'd4, clock, reset);
+  initial begin
+    $monitor($time, " :clock= %b q= %b ", clock, q);
+    #0  clock = 1'b0; //PC = 32'd20; reset = 1'b0;
+    #100 $finish;
+  end
+  always  begin
+    #10 clock = ~clock;
+  end
+endmodule*/
